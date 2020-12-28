@@ -195,6 +195,21 @@ namespace PdfSharp1_32.Drawing
     }
 
     /// <summary>
+    /// Creates an image from the specified stream.<br/>
+    /// Silverlight supports PNG and JPEG only.
+    /// </summary>
+    /// <param name="stream">The stream containing a BMP, PNG, GIF, JPEG, TIFF, or PDF file.</param>
+    public static XImage FromStream(Stream stream)
+    {
+	    if (stream == null)
+		    throw new ArgumentNullException("stream");
+
+	    if (PdfReader.TestPdfFile(stream) > 0)
+		    return new XPdfForm(stream);
+	    return new XImage(stream);
+    }
+
+    /// <summary>
     /// Tests if a file exist. Supports PDF files with page number suffix.
     /// </summary>
     /// <param name="path">The path to a BMP, PNG, GIF, JPEG, TIFF, or PDF file.</param>

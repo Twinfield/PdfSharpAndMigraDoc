@@ -60,18 +60,19 @@ namespace MigraDoc.Rendering
 
     internal override void Format(Area area, FormatInfo previousFormatInfo)
     {
-      this.imageFilePath = image.GetFilePath(this.documentRenderer.WorkingDirectory);
-      //if (!File.Exists(this.imageFilePath))
-      if (!XImage.ExistsFile(this.imageFilePath))
-      {
-        this.failure = ImageFailure.FileNotFound;
-        Trace.WriteLine(Messages.ImageNotFound(this.image.Name), "warning");
-      }
-      ImageFormatInfo formatInfo = (ImageFormatInfo)this.renderInfo.FormatInfo;
-      formatInfo.failure = this.failure;
-      formatInfo.ImagePath = this.imageFilePath;
-      CalculateImageDimensions();
-      base.Format(area, previousFormatInfo);
+	    this.imageFilePath = image.GetFilePath(this.documentRenderer.WorkingDirectory);
+	    // The Image is stored in the string if path starts with "base64:", otherwise we check whether the file exists.
+	    if (!this.imageFilePath.StartsWith("base64:") &&
+	        !XImage.ExistsFile(this.imageFilePath))
+	    {
+		    this.failure = ImageFailure.FileNotFound;
+		    Debug.WriteLine(Messages.ImageNotFound(this.image.Name), "warning");
+	    }
+	    ImageFormatInfo formatInfo = (ImageFormatInfo)this.renderInfo.FormatInfo;
+	    formatInfo.failure = this.failure;
+	    formatInfo.ImagePath = this.imageFilePath;
+	    CalculateImageDimensions();
+	    base.Format(area, previousFormatInfo);
     }
 
     protected override XUnit ShapeHeight
@@ -106,7 +107,7 @@ namespace MigraDoc.Rendering
         try
         {
           XRect srcRect = new XRect(formatInfo.CropX, formatInfo.CropY, formatInfo.CropWidth, formatInfo.CropHeight);
-          xImage = XImage.FromFile(formatInfo.ImagePath);
+          xImage = CreateXImage(formatInfo.ImagePath);
           this.gfx.DrawImage(xImage, destRect, srcRect, XGraphicsUnit.Point); //Pixel.
         }
         catch (Exception)
@@ -165,7 +166,7 @@ namespace MigraDoc.Rendering
         XImage xImage = null;
         try
         {
-          xImage = XImage.FromFile(this.imageFilePath);
+	        xImage = CreateXImage(formatInfo.ImagePath);
         }
         catch (InvalidOperationException ex)
         {
@@ -304,6 +305,32 @@ namespace MigraDoc.Rendering
           formatInfo.Height = XUnit.FromCentimeter(2.5);
         return;
       }
+    }
+
+    XImage CreateXImage(string uri)
+    {
+	    if (uri.StartsWith("base64:"))
+	    {
+		    string base64 = uri.Substring("base64:".Length);
+		    byte[] bytes = Convert.FromBase64String(base64);
+#if WPF || CORE_WITH_GDI || GDI
+		    // WPF stores a reference to the stream internally. We must not destroy the stream here, otherwise rendering the PDF will fail.
+		    // Same for GDI. CORE currently uses the GDI implementation.
+		    // We have to rely on the garbage collector to properly dispose the MemoryStream.
+		    {
+			    Stream stream = new MemoryStream(bytes);
+			    XImage image = XImage.FromStream(stream);
+			    return image;
+		    }
+#else
+                using (Stream stream = new MemoryStream(bytes))
+                {
+                    XImage image = XImage.FromStream(stream);
+                    return image;
+                }
+#endif
+	    }
+	    return XImage.FromFile(uri);
     }
 
     Image image;
