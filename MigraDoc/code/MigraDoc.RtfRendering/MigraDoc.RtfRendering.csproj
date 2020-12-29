@@ -3,10 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputPath>..\..\..\lib</OutputPath>
-    <IsPackable>true</IsPackable>
-    <Version>1.33.0000.0</Version>
-    <Version Condition="$(BuildNumber) != '' And $(SourceBranchName) == 'master'">$(Version).$(BuildNumber)</Version>
-    <Version Condition="$(SourceBranchName) != 'master' And $(SourceBranchName) != ''">$(Version)-$(SourceBranchName.toLower()).$(BuildNumber)</Version>
+    <Version>1.33.0</Version>
+    <Version Condition="!($(SourceBranchName) == 'master' Or $(SourceBranchName) == 'TableRenderingPerformancePatch') And $(SourceBranchName) != ''">$(Version)-$(SourceBranchName.toLower()).$(BuildNumber)</Version>
     <NuspecFile>MigraDoc.Improved.nuspec</NuspecFile>
     <NuspecProperties>version=$(Version)</NuspecProperties>
     <NuspecBasePath>$(OutputPath)\$(TargetFramework)\publish</NuspecBasePath>
