@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputPath>..\..\..\lib</OutputPath>
     <IsPackable>true</IsPackable>
-    <Version>1.32.6550.0</Version>
+    <Version>1.33.0000.0</Version>
     <Version Condition="$(BuildNumber) != '' And $(SourceBranchName) == 'master'">$(Version).$(BuildNumber)</Version>
     <Version Condition="$(SourceBranchName) != 'master' And $(SourceBranchName) != ''">$(Version)-$(SourceBranchName.toLower()).$(BuildNumber)</Version>
     <NuspecFile>MigraDoc.Improved.nuspec</NuspecFile>
