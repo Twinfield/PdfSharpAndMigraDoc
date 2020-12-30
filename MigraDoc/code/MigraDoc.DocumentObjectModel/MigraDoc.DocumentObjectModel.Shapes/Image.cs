@@ -211,10 +211,6 @@ namespace MigraDoc.DocumentObjectModel.Shapes
 		    filePath = Directory.GetCurrentDirectory() + "\\";
 #else
             throw new NotImplementedException();
-            //if (!String.IsNullOrEmpty(workingDir))
-            //    filePath = workingDir;
-            //else
-            //    filePath = Directory.GetCurrentDirectory() + "\\";
 #endif
 
 	    if (!Document.IsNull("ImagePath"))
