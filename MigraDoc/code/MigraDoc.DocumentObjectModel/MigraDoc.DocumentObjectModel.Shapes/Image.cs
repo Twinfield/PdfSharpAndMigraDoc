@@ -199,34 +199,32 @@ namespace MigraDoc.DocumentObjectModel.Shapes
     /// </summary>
     public string GetFilePath(string workingDir)
     {
-      string filePath = "";
+	    if (Name.StartsWith("base64:")) // The file is stored in the string here, so we don't have to add a path.
+		    return Name;
 
-      try
-      {
-        if (!String.IsNullOrEmpty(workingDir))
-          filePath = workingDir;
-        else
-          filePath = Directory.GetCurrentDirectory() + "\\";
+	    string filePath;
 
-        if (!Document.IsNull("ImagePath"))
-        {
-          string foundfile = ImageHelper.GetImageName(filePath, this.Name, Document.ImagePath);
-          if (foundfile != null)
-            filePath = foundfile;
-          else
-            filePath = Path.Combine(filePath, Name);
-        }
-        else
-          filePath = Path.Combine(filePath, Name);
-      }
-      catch (Exception ex)
-      {
-        Debug.Assert(false, "Should never occur with properly formatted Wiki texts. " + ex);
-        return null;
-        //throw;
-      }
+#if !NETFX_CORE
+	    if (!String.IsNullOrEmpty(workingDir))
+		    filePath = workingDir;
+	    else
+		    filePath = Directory.GetCurrentDirectory() + "\\";
+#else
+            throw new NotImplementedException();
+#endif
 
-      return filePath;
+	    if (!Document.IsNull("ImagePath"))
+	    {
+		    string foundfile = ImageHelper.GetImageName(filePath, Name, Document.ImagePath);
+		    if (foundfile != null)
+			    filePath = foundfile;
+		    else
+			    filePath = Path.Combine(filePath, Name);
+	    }
+	    else
+		    filePath = Path.Combine(filePath, Name);
+
+	    return filePath;
     }
 
     /// <summary>

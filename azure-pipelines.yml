@@ -1,0 +1,66 @@
+# Following variables must be defined manually for Azure DevOps pipeline.
+# Attention! All relative paths are relative to the checkout directory.
+#
+# Required:
+# - BuildConfiguration - Release or Debug. Usally Release value for DevOps build
+# - RelativePath - path to source folder with solution
+
+# Control flow variables:
+# - Control.ForceRun - set to 'false', set flag 'Let users override this value when running this pipeline'
+
+
+pool:
+  vmImage: "windows-2019"
+
+variables:
+- group: Artifactory
+- group: general
+
+- name: NugetCachePath
+  value: $(Pipeline.Workspace)\.nuget\packages
+- name: BuildRevisionNumber
+  value: $[counter(variables['System.DefinitionId'], 1)]
+
+resources:
+  repositories:
+  - repository: Twinfield
+    type: github
+    endpoint: Twinfield
+    name: Twinfield/Twinfield
+    ref: refs/heads/master
+
+steps:
+- template: /Build/task-templates/shared/download-template-library.yml@Twinfield
+  parameters:
+    resourceName: Twinfield
+- template: /Build/task-templates/shared/cancel-if-no-changes.yml@Twinfield
+  parameters:
+    relativePath: $(RelativePath)
+    compareMasterOnly: true
+    pat: $(Control.PAT)
+    skipStep: $(Control.ForceRun)
+- template: /Build/task-templates/shared/log-contextual-info.yml@Twinfield
+- template: /Build/task-templates/shared/install-certificates-on-agent.yml@Twinfield
+- template: /Build/task-templates/dotnet-cli/nuget-configure.yml@Twinfield
+  parameters:
+    feedName: $(nuget.feed.name)
+    feedUrl: $(nuget.feed.url)
+    artifactoryUser: $(artifactory.username)
+    artifactoryPassword: $(artifactory.password)
+- template: /Build/task-templates/dotnet-cli/dotnet-cli-restore.yml@Twinfield
+  parameters:
+    relativePath: $(RelativePath)
+    buildRevisionNumber: $(BuildRevisionNumber)
+    nugetCachePath: $(NugetCachePath)    
+- template: /Build/task-templates/dotnet-cli/dotnet-cli-build.yml@Twinfield
+  parameters:
+    relativePath: $(RelativePath)
+    buildConfiguration: $(BuildConfiguration)
+    buildRevisionNumber: $(BuildRevisionNumber)
+- template: /Build/task-templates/dotnet-cli/dotnet-cli-pack.yml@Twinfield
+  parameters:
+    relativePath: $(RelativePath)
+    buildRevisionNumber: $(BuildRevisionNumber)
+- template: /Build/task-templates/dotnet-cli/nuget-unregister-artifactory.yml@Twinfield
+  parameters:
+    feedName: $(nuget.feed.name)
